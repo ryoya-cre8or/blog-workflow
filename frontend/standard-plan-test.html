@@ -453,7 +453,8 @@
                 message: {
                     keyword: document.getElementById('keywords').value,
                     persona: document.getElementById('targetAudience').value,
-                    tone: document.getElementById('writingStyle').value
+                    tone: document.getElementById('writingStyle').value,
+                    plan: 'seo_standard'
                 }
             }];
         }
@@ -501,14 +502,24 @@
          * @param {Response} response - フェッチレスポンス
          */
         async function handleApiResponse(response) {
-            const responseBody = await response.json();
-            
-            if (!response.ok) {
-                throw new Error(`${responseBody.error}`);
-            }
-            
             const responseText = await response.text();
             console.log('Response text:', responseText);
+            
+            if (!response.ok) {
+                let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+                try {
+                    const errorData = JSON.parse(responseText);
+                    if (errorData.error) {
+                        errorMessage = errorData.error;
+                    }
+                } catch (e) {
+                    // JSONパースできない場合はそのままのテキストを使用
+                    if (responseText) {
+                        errorMessage = responseText;
+                    }
+                }
+                throw new Error(errorMessage);
+            }
             
             if (!responseText) {
                 throw new Error('レスポンスが空です');
