@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New chat setup</title>
+    
+    <!-- ============================= CSS ============================= -->
+    <style>
+        /* ===== リセット・ベース設定 ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Meiryo', sans-serif;
+            background-color: #f6f6f6;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            margin: 0;
+        }
+
+        /* ===== メインコンテナ ===== */
+        .container {
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            padding: 32px;
+            width: 100%;
+            max-width: 75%;
+        }
+
+        /* ===== ヘッダー ===== */
+        .header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 32px;
+        }
+
+        .chat-icon {
+            background-color: #007BFF;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+        }
+
+        .chat-icon svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        h1 {
+            font-size: 20px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        /* ===== フォーム要素 ===== */
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        label {
+            display: block;
+            font-size: 14px;
+            color: #333;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        input[type="text"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            background-color: #f8f8f8;
+            transition: all 0.2s;
+        }
+
+        input[type="text"]:focus,
+        textarea:focus,
+        select:focus {
+            outline: none;
+            border-color: #007BFF;
+            background-color: white;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        select {
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23333' d='M6 8L0 0h12z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 16px center;
+            padding-right: 40px;
+        }
+
+        /* ===== ボタン ===== */
+        .submit-btn {
+            width: 100%;
+            padding: 16px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .submit-btn:hover {
+            background-color: #0056b3;
+        }
+
+        .submit-btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        .copy-btn {
+            padding: 8px 16px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .copy-btn:hover {
+            background-color: #218838;
+            transform: translateY(-1px);
+        }
+
+        .copy-btn.copied {
+            background-color: #17a2b8;
+        }
+
+        .copy-icon {
+            width: 16px;
+            height: 16px;
+        }
+
+        /* ===== レスポンス表示エリア ===== */
+        .response-container {
+            margin-top: 32px;
+            display: none;
+        }
+
+        .response-header {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .response-content {
+            padding: 0;
+            background-color: white;
+            border-radius: 8px;
+            overflow-x: auto;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        /* ===== テーブル ===== */
+        .response-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .response-table th,
+        .response-table td {
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .response-table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .response-table tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .response-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .tag-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            background-color: #007BFF;
+            color: white;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .tag-badge.h3 {
+            background-color: #6c757d;
+        }
+
+        /* ===== ローディング表示 ===== */
+        .loading {
+            text-align: center;
+            color: #666;
+            padding: 40px;
+            font-size: 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .lightbulb {
+            width: 60px;
+            height: 60px;
+            position: relative;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        .lightbulb::before {
+            content: '';
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background: #ffd700;
+            border-radius: 50%;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            box-shadow: 0 0 20px #ffd700;
+            animation: glow 1.5s ease-in-out infinite;
+        }
+
+        .lightbulb::after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: #666;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            border-radius: 0 0 10px 10px;
+        }
+
+        /* ===== アニメーション ===== */
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        @keyframes glow {
+            0%, 100% { 
+                box-shadow: 0 0 20px #ffd700, 0 0 40px #ffd700;
+                background: #ffd700;
+            }
+            50% { 
+                box-shadow: 0 0 30px #ffed4b, 0 0 60px #ffed4b;
+                background: #ffed4b;
+            }
+        }
+
+        /* ===== エラー表示 ===== */
+        .error {
+            color: #dc3545;
+            text-align: center;
+            padding: 20px;
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            border-radius: 6px;
+            margin: 16px;
+        }
+
+        .loading-text {
+            font-size: 18px;
+            color: #555;
+        }
+
+        /* ===== レスポンシブ対応 ===== */
+        @media (max-width: 768px) {
+            .container {
+                max-width: 95%;
+                padding: 20px;
+            }
+            
+            .response-table {
+                font-size: 12px;
+            }
+            
+            .response-table th,
+            .response-table td {
+                padding: 8px 12px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- メインコンテナ -->
+    <div class="container">
+        <!-- ヘッダーセクション -->
+        <div class="header">
+            <div class="chat-icon">
+                <svg fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M20 2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14l4 4V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/>
+                </svg>
+            </div>
+            <h1>New chat setup</h1>
+        </div>
+
+        <!-- フォームセクション -->
+        <form id="chatForm">
+            <!-- ユーザーID入力 -->
+            <div class="form-group">
+                <label for="userId">ユーザーID</label>
+                <input type="text" id="userId" name="userId" placeholder="例: eb3eec29-a8db-4abb-8977-4dce12e13f70" required>
+            </div>
+
+            <!-- キーワード入力 -->
+            <div class="form-group">
+                <label for="keywords">SEO対策するキーワードを入力してください</label>
+                <input type="text" id="keywords" name="keywords" placeholder="例: 賃貸" required>
+            </div>
+
+            <!-- ターゲットオーディエンス入力 -->
+            <div class="form-group">
+                <label for="targetAudience">この記事を読むのはどんな人？（性別/年齢/何を知りたいか？）</label>
+                <textarea id="targetAudience" name="targetAudience" placeholder="例: エンジニア1年目、30代男性で賃貸物件を探している人、など" required></textarea>
+            </div>
+
+            <!-- 文章スタイル選択 -->
+            <div class="form-group">
+                <label for="writingStyle">文章の雰囲気を選んでください</label>
+                <select id="writingStyle" name="writingStyle" required>
+                    <option value="">文章の雰囲気を選んでください</option>
+                    <option value="誰でもわかるように">誰でもわかるように</option>
+                    <option value="専門的に">専門的に</option>
+                    <option value="親しみやすく">親しみやすく</option>
+                    <option value="フォーマルに">フォーマルに</option>
+                    <option value="カジュアルに">カジュアルに</option>
+                </select>
+            </div>
+
+            <!-- 送信ボタン -->
+            <button type="submit" class="submit-btn" id="submitBtn">Start Chat</button>
+        </form>
+
+        <!-- レスポンス表示セクション -->
+        <div class="response-container" id="responseContainer">
+            <!-- レスポンスヘッダー（コピーボタン） -->
+            <div class="response-header">
+                <button class="copy-btn" id="copyBtn" onclick="copyResponse()">
+                    <svg class="copy-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                    </svg>
+                    コピー
+                </button>
+            </div>
+            <!-- レスポンス内容表示エリア -->
+            <div class="response-content" id="responseContent"></div>
+        </div>
+    </div>
+
+    <!-- ========================== JavaScript ========================== -->
+    <script>
+        /**
+         * New Chat Setup Application
+         * フォーム送信とレスポンス表示を管理するメインスクリプト
+         */
+
+        // ===== DOM要素の取得 =====
+        const form = document.getElementById('chatForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const responseContainer = document.getElementById('responseContainer');
+        const responseContent = document.getElementById('responseContent');
+        const copyBtn = document.getElementById('copyBtn');
+
+        // ===== グローバル変数 =====
+        let rawResponse = '';
+
+        // ===== 初期化 =====
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeEventListeners();
+        });
+
+        /**
+         * イベントリスナーの初期化
+         */
+        function initializeEventListeners() {
+            form.addEventListener('submit', handleFormSubmit);
+        }
+
+        /**
+         * フォーム送信処理
+         * @param {Event} e - フォームイベント
+         */
+        async function handleFormSubmit(e) {
+            e.preventDefault();
+            
+            try {
+                const requestBody = buildRequestBody();
+                console.log('Request body:', JSON.stringify(requestBody, null, 2));
+                
+                showLoadingState();
+                const response = await sendApiRequest(requestBody);
+                await handleApiResponse(response);
+                
+            } catch (error) {
+                handleError(error);
+            } finally {
+                resetSubmitButton();
+            }
+        }
+
+        /**
+         * リクエストボディの構築
+         * @returns {Array} APIリクエスト用のデータ
+         */
+        function buildRequestBody() {
+            return [{
+                user_id: document.getElementById('userId').value,
+                message: {
+                    keyword: document.getElementById('keywords').value,
+                    persona: document.getElementById('targetAudience').value,
+                    tone: document.getElementById('writingStyle').value
+                }
+            }];
+        }
+
+        /**
+         * ローディング状態の表示
+         */
+        function showLoadingState() {
+            submitBtn.disabled = true;
+            submitBtn.textContent = '送信中...';
+            
+            responseContainer.style.display = 'block';
+            responseContent.innerHTML = `
+                <div class="loading">
+                    <div class="lightbulb"></div>
+                    <div class="loading-text">AIが見出し構成を生成中...</div>
+                </div>
+            `;
+        }
+
+        /**
+         * API リクエストの送信
+         * @param {Array} requestBody - リクエストデータ
+         * @returns {Response} フェッチレスポンス
+         */
+        async function sendApiRequest(requestBody) {
+            const response = await fetch('https://machibun.app.n8n.cloud/webhook/info-message/ask-ai', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(requestBody),
+                mode: 'cors',
+                credentials: 'omit'
+            });
+            
+            console.log('Response status:', response.status);
+            console.log('Response headers:', response.headers);
+            
+            return response;
+        }
+
+        /**
+         * API レスポンスの処理
+         * @param {Response} response - フェッチレスポンス
+         */
+        async function handleApiResponse(response) {
+            const responseBody = await response.json();
+            
+            if (!response.ok) {
+                throw new Error(`${responseBody.error}`);
+            }
+            
+            const responseText = await response.text();
+            console.log('Response text:', responseText);
+            
+            if (!responseText) {
+                throw new Error('レスポンスが空です');
+            }
+            
+            processResponseData(responseText);
+        }
+
+        /**
+         * レスポンスデータの処理と表示
+         * @param {string} responseText - レスポンステキスト
+         */
+        function processResponseData(responseText) {
+            try {
+                const data = JSON.parse(responseText);
+                
+                if (data.message) {
+                    rawResponse = data.message;
+                    const htmlTable = convertMarkdownTableToHTML(data.message);
+                    responseContent.innerHTML = htmlTable;
+                } else {
+                    rawResponse = JSON.stringify(data, null, 2);
+                    responseContent.innerHTML = `<pre style="padding: 16px;">${escapeHtml(rawResponse)}</pre>`;
+                }
+            } catch (jsonError) {
+                console.log('JSON parse error:', jsonError);
+                rawResponse = responseText;
+                responseContent.innerHTML = `<div style="white-space: pre-wrap; padding: 16px;">${escapeHtml(responseText)}</div>`;
+            }
+        }
+
+        /**
+         * エラーハンドリング
+         * @param {Error} error - エラーオブジェクト
+         */
+        function handleError(error) {
+            console.error('Error:', error);
+            
+            let errorMessage = 'エラーが発生しました: ';
+            
+            if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+                errorMessage += 'APIに接続できませんでした。CORSエラーの可能性があります。';
+            } else {
+                errorMessage += error.message;
+            }
+            
+            responseContent.innerHTML = `<div class="error">${errorMessage}</div>`;
+            rawResponse = '';
+        }
+
+        /**
+         * 送信ボタンのリセット
+         */
+        function resetSubmitButton() {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Start Chat';
+        }
+
+        /**
+         * HTMLエスケープ処理
+         * @param {string} text - エスケープするテキスト
+         * @returns {string} エスケープ済みテキスト
+         */
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, m => map[m]);
+        }
+
+        /**
+         * マークダウンテーブルをHTMLテーブルに変換
+         * @param {string} markdown - マークダウンテキスト
+         * @returns {string} HTMLテーブル
+         */
+        function convertMarkdownTableToHTML(markdown) {
+            const lines = markdown.trim().split('\n');
+            if (lines.length < 2) return markdown;
+            
+            let html = '<table class="response-table">';
+            
+            for (let i = 0; i < lines.length; i++) {
+                // セパレーター行（|---|---|）をスキップ
+                if (lines[i].includes('|---')) continue;
+                
+                const cells = lines[i].split('|').map(cell => cell.trim()).filter(cell => cell);
+                
+                if (i === 0) {
+                    // ヘッダー行
+                    html += '<thead><tr>';
+                    cells.forEach(cell => {
+                        html += `<th>${escapeHtml(cell)}</th>`;
+                    });
+                    html += '</tr></thead><tbody>';
+                } else {
+                    // データ行
+                    html += '<tr>';
+                    cells.forEach((cell, index) => {
+                        // 最初のセルにタグバッジスタイルを適用
+                        if (index === 0 && (cell.includes('<H') || cell.includes('</H'))) {
+                            const isH3 = cell.includes('H3');
+                            html += `<td><span class="tag-badge${isH3 ? ' h3' : ''}">${escapeHtml(cell)}</span></td>`;
+                        } else {
+                            html += `<td>${escapeHtml(cell)}</td>`;
+                        }
+                    });
+                    html += '</tr>';
+                }
+            }
+            
+            html += '</tbody></table>';
+            return html;
+        }
+
+        /**
+         * レスポンステキストのコピー機能
+         */
+        async function copyResponse() {
+            if (!rawResponse) return;
+            
+            try {
+                await navigator.clipboard.writeText(rawResponse);
+                showCopySuccess();
+            } catch (err) {
+                console.error('コピーに失敗しました:', err);
+                alert('コピーに失敗しました');
+            }
+        }
+
+        /**
+         * コピー成功時のUI更新
+         */
+        function showCopySuccess() {
+            const btn = document.getElementById('copyBtn');
+            
+            // コピー成功アイコンとテキストに変更
+            btn.innerHTML = `
+                <svg class="copy-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+                コピーしました！
+            `;
+            btn.classList.add('copied');
+            
+            // 2秒後に元に戻す
+            setTimeout(() => {
+                btn.innerHTML = `
+                    <svg class="copy-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                    </svg>
+                    コピー
+                `;
+                btn.classList.remove('copied');
+            }, 2000);
+        }
+    </script>
+</body>
+</html>
