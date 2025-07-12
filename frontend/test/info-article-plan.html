@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>コンテンツ作成フォーム</title>
+    <title>お知らせプラン</title>
     
     <!-- ============================= CSS ============================= -->
     <style>
@@ -85,8 +85,7 @@
 
         input[type="text"],
         textarea,
-        select,
-        input[type="file"] {
+        select {
             width: 100%;
             padding: 12px 16px;
             border: 1px solid #e0e0e0;
@@ -98,8 +97,7 @@
 
         input[type="text"]:focus,
         textarea:focus,
-        select:focus,
-        input[type="file"]:focus {
+        select:focus {
             outline: none;
             border-color: #28a745;
             background-color: white;
@@ -330,22 +328,6 @@
             margin: 16px;
         }
 
-        /* ===== 文字数カウンター ===== */
-        .char-counter {
-            font-size: 12px;
-            color: #6c757d;
-            text-align: right;
-            margin-top: 4px;
-        }
-
-        .char-counter.warning {
-            color: #ffc107;
-        }
-
-        .char-counter.error {
-            color: #dc3545;
-        }
-
         /* ===== レスポンシブ対応 ===== */
         @media (max-width: 768px) {
             .container {
@@ -374,7 +356,7 @@
                     <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
                 </svg>
             </div>
-            <h1>コンテンツ作成フォーム</h1>
+            <h1>お知らせプラン</h1>
         </div>
 
         <!-- フォームセクション -->
@@ -388,8 +370,7 @@
             <!-- トピック入力 -->
             <div class="form-group">
                 <label for="topic">トピック<span class="required-mark">*</span></label>
-                <input type="text" id="topic" name="topic" placeholder="例: 新商品の紹介" maxlength="20" required>
-                <div class="char-counter" id="topicCounter">0/20文字</div>
+                <input type="text" id="topic" name="topic" placeholder="例: 新商品の紹介" required>
             </div>
 
             <!-- 本文メモ入力 -->
@@ -402,11 +383,11 @@
             <div class="form-group">
                 <label for="attachments">添付資料（PDF, Word文書）</label>
                 <div class="file-upload-area" id="fileUploadArea">
-                    <input type="file" id="attachments" name="attachments" class="file-input" multiple accept=".pdf,.docx,.doc">
+                    <input type="file" id="attachments" name="attachments" class="file-input" accept=".pdf,.docx,.doc">
                     <div class="file-upload-content">
                         <div class="file-upload-icon">📎</div>
                         <div class="file-upload-text">ファイルをドラッグ＆ドロップ</div>
-                        <div class="file-upload-hint">または クリックして選択（PDF, Word文書）</div>
+                        <div class="file-upload-hint">または クリックして選択（PDF, Word文書、1ファイルのみ）</div>
                     </div>
                 </div>
                 <div class="uploaded-files" id="uploadedFiles"></div>
@@ -426,8 +407,20 @@
 
             <!-- 読者ターゲット入力 -->
             <div class="form-group">
-                <label for="targetAudience">読者ターゲット<span class="required-mark">*</span></label>
-                <input type="text" id="targetAudience" name="targetAudience" placeholder="例: 既存顧客、新規顧客、パートナー企業、留学生など" required>
+                <label for="targetAudienceSelect">読者ターゲット<span class="required-mark">*</span></label>
+                <select id="targetAudienceSelect" name="targetAudienceSelect" required>
+                    <option value="">読者ターゲットを選択してください</option>
+                    <option value="既存顧客">既存顧客</option>
+                    <option value="新規顧客">新規顧客</option>
+                    <option value="パートナー企業">パートナー企業</option>
+                    <option value="留学生">留学生</option>
+                    <option value="その他">その他</option>
+                </select>
+                <div class="form-group" id="customTargetGroup" style="display: none; margin-top: 16px;">
+                    <label for="customTarget">具体的なターゲット<span class="required-mark">*</span></label>
+                    <input type="text" id="customTarget" name="customTarget" placeholder="具体的な読者ターゲットを入力してください">
+                </div>
+                <input type="hidden" id="targetAudience" name="targetAudience">
             </div>
 
             <!-- 送信ボタン -->
@@ -454,7 +447,7 @@
     <script>
         /**
          * Content Creation Form Application
-         * コンテンツ作成フォームの送信とレスポンス表示を管理するメインスクリプト
+         * お知らせプランの送信とレスポンス表示を管理するメインスクリプト
          */
 
         // ===== DOM要素の取得 =====
@@ -466,12 +459,10 @@
         const fileUploadArea = document.getElementById('fileUploadArea');
         const fileInput = document.getElementById('attachments');
         const uploadedFiles = document.getElementById('uploadedFiles');
-        const topicInput = document.getElementById('topic');
-        const topicCounter = document.getElementById('topicCounter');
 
         // ===== グローバル変数 =====
         let rawResponse = '';
-        let selectedFiles = [];
+        let selectedFile = null;
 
         // ===== 初期化 =====
         document.addEventListener('DOMContentLoaded', function() {
@@ -490,8 +481,9 @@
             fileUploadArea.addEventListener('dragleave', handleDragLeave);
             fileUploadArea.addEventListener('drop', handleDrop);
             
-            // 文字数カウンター
-            topicInput.addEventListener('input', updateCharCounter);
+            // 読者ターゲット選択関連
+            document.getElementById('targetAudienceSelect').addEventListener('change', handleTargetAudienceChange);
+            document.getElementById('customTarget').addEventListener('input', handleCustomTargetInput);
         }
 
         /**
@@ -523,21 +515,18 @@
         function buildFormData() {
             const formData = new FormData();
             
-            // 基本データ
-            const requestData = {
-                user_id: document.getElementById('userId').value,
-                topic: document.getElementById('topic').value,
-                content_memo: document.getElementById('contentMemo').value,
-                tone: document.getElementById('tone').value,
-                target_audience: document.getElementById('targetAudience').value
-            };
-            
-            formData.append('data', JSON.stringify(requestData));
+            // 基本データを個別に追加
+            formData.append('user_id', document.getElementById('userId').value);
+            formData.append('topic', document.getElementById('topic').value);
+            formData.append('content_memo', document.getElementById('contentMemo').value);
+            formData.append('tone', document.getElementById('tone').value);
+            formData.append('target_audience', document.getElementById('targetAudience').value);
+            formData.append('plan', 'info_article');
             
             // ファイルの追加
-            selectedFiles.forEach((file, index) => {
-                formData.append('file_' + index, file);
-            });
+            if (selectedFile) {
+                formData.append('file', selectedFile);
+            }
             
             return formData;
         }
@@ -550,11 +539,12 @@
             submitBtn.textContent = '作成中...';
             
             responseContainer.style.display = 'block';
-            responseContent.innerHTML = 
-                '<div class="loading">' +
-                    '<div class="spinner"></div>' +
-                    '<div class="loading-text">AIがコンテンツを作成中...</div>' +
-                '</div>';
+            responseContent.innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <div class="loading-text">AIがコンテンツを作成中...</div>
+                </div>
+            `;
         }
 
         /**
@@ -581,13 +571,23 @@
          * @param {Response} response - フェッチレスポンス
          */
         async function handleApiResponse(response) {
-            if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error('サーバーエラー: ' + response.status + ' ' + errorText);
-            }
-            
             const responseText = await response.text();
             console.log('Response text:', responseText);
+            
+            if (!response.ok) {
+                let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+                try {
+                    const errorData = JSON.parse(responseText);
+                    if (errorData.error) {
+                        errorMessage = errorData.error;
+                    }
+                } catch (e) {
+                    if (responseText) {
+                        errorMessage = responseText;
+                    }
+                }
+                throw new Error(errorMessage);
+            }
             
             if (!responseText) {
                 throw new Error('レスポンスが空です');
@@ -606,15 +606,15 @@
                 
                 if (data.content) {
                     rawResponse = data.content;
-                    responseContent.innerHTML = '<div style="white-space: pre-wrap;">' + escapeHtml(data.content) + '</div>';
+                    responseContent.innerHTML = `<div style="white-space: pre-wrap;">${escapeHtml(data.content)}</div>`;
                 } else {
                     rawResponse = JSON.stringify(data, null, 2);
-                    responseContent.innerHTML = '<pre>' + escapeHtml(rawResponse) + '</pre>';
+                    responseContent.innerHTML = `<pre>${escapeHtml(rawResponse)}</pre>`;
                 }
             } catch (jsonError) {
                 console.log('JSON parse error:', jsonError);
                 rawResponse = responseText;
-                responseContent.innerHTML = '<div style="white-space: pre-wrap;">' + escapeHtml(responseText) + '</div>';
+                responseContent.innerHTML = `<div style="white-space: pre-wrap;">${escapeHtml(responseText)}</div>`;
             }
         }
 
@@ -633,7 +633,7 @@
                 errorMessage += error.message;
             }
             
-            responseContent.innerHTML = '<div class="error">' + errorMessage + '</div>';
+            responseContent.innerHTML = `<div class="error">${errorMessage}</div>`;
             rawResponse = '';
         }
 
@@ -658,7 +658,38 @@
                 '"': '&quot;',
                 "'": '&#039;'
             };
-            return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+            return text.replace(/[&<>"']/g, m => map[m]);
+        }
+
+        /**
+         * 読者ターゲット選択変更処理
+         * @param {Event} e - 選択変更イベント
+         */
+        function handleTargetAudienceChange(e) {
+            const selectedValue = e.target.value;
+            const customTargetGroup = document.getElementById('customTargetGroup');
+            const customTargetInput = document.getElementById('customTarget');
+            const targetAudienceHidden = document.getElementById('targetAudience');
+            
+            if (selectedValue === 'その他') {
+                customTargetGroup.style.display = 'block';
+                customTargetInput.required = true;
+                targetAudienceHidden.value = '';
+            } else {
+                customTargetGroup.style.display = 'none';
+                customTargetInput.required = false;
+                customTargetInput.value = '';
+                targetAudienceHidden.value = selectedValue;
+            }
+        }
+
+        /**
+         * カスタムターゲット入力処理
+         * @param {Event} e - 入力イベント
+         */
+        function handleCustomTargetInput(e) {
+            const targetAudienceHidden = document.getElementById('targetAudience');
+            targetAudienceHidden.value = e.target.value;
         }
 
         /**
@@ -666,8 +697,10 @@
          * @param {Event} e - ファイル選択イベント
          */
         function handleFileSelect(e) {
-            const files = Array.from(e.target.files);
-            addFiles(files);
+            const file = e.target.files[0];
+            if (file) {
+                addFile(file);
+            }
         }
 
         /**
@@ -696,26 +729,25 @@
             e.preventDefault();
             fileUploadArea.classList.remove('dragover');
             
-            const files = Array.from(e.dataTransfer.files);
-            addFiles(files);
+            const file = e.dataTransfer.files[0];
+            if (file) {
+                addFile(file);
+            }
         }
 
         /**
          * ファイル追加処理
-         * @param {Array} files - ファイル配列
+         * @param {File} file - ファイル
          */
-        function addFiles(files) {
-            const validFiles = files.filter(function(file) {
-                const validTypes = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/msword'];
-                return validTypes.includes(file.type);
-            });
+        function addFile(file) {
+            const validTypes = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/msword'];
             
-            validFiles.forEach(function(file) {
-                if (!selectedFiles.find(function(f) { return f.name === file.name && f.size === file.size; })) {
-                    selectedFiles.push(file);
-                }
-            });
+            if (!validTypes.includes(file.type)) {
+                alert('PDF、Word文書のみアップロード可能です。');
+                return;
+            }
             
+            selectedFile = file;
             updateFileDisplay();
         }
 
@@ -725,26 +757,28 @@
         function updateFileDisplay() {
             uploadedFiles.innerHTML = '';
             
-            selectedFiles.forEach(function(file, index) {
+            if (selectedFile) {
                 const fileItem = document.createElement('div');
                 fileItem.className = 'file-item';
-                fileItem.innerHTML =
-                    '<div class="file-info">' +
-                        '<span class="file-icon">📄</span>' +
-                        '<span>' + file.name + ' (' + formatFileSize(file.size) + ')</span>' +
-                    '</div>' +
-                    '<button type="button" class="remove-file" onclick="removeFile(' + index + ')">✕</button>';
+                fileItem.innerHTML = `
+                    <div class="file-info">
+                        <span class="file-icon">📄</span>
+                        <span>${selectedFile.name} (${formatFileSize(selectedFile.size)})</span>
+                    </div>
+                    <button type="button" class="remove-file" onclick="removeFile()">✕</button>
+                `;
                 uploadedFiles.appendChild(fileItem);
-            });
+            }
         }
 
         /**
          * ファイル削除
-         * @param {number} index - ファイルインデックス
          */
-        function removeFile(index) {
-            selectedFiles.splice(index, 1);
+        function removeFile() {
+            selectedFile = null;
             updateFileDisplay();
+            // ファイル入力もクリア
+            document.getElementById('attachments').value = '';
         }
 
         /**
@@ -758,23 +792,6 @@
             const sizes = ['Bytes', 'KB', 'MB', 'GB'];
             const i = Math.floor(Math.log(bytes) / Math.log(k));
             return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-        }
-
-        /**
-         * 文字数カウンター更新
-         */
-        function updateCharCounter() {
-            const current = topicInput.value.length;
-            const max = 20;
-            topicCounter.textContent = current + '/' + max + '文字';
-            
-            if (current >= max) {
-                topicCounter.className = 'char-counter error';
-            } else if (current >= max * 0.8) {
-                topicCounter.className = 'char-counter warning';
-            } else {
-                topicCounter.className = 'char-counter';
-            }
         }
 
         /**
@@ -799,20 +816,22 @@
             const btn = document.getElementById('copyBtn');
             
             // コピー成功アイコンとテキストに変更
-            btn.innerHTML =
-                '<svg class="copy-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">' +
-                    '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>' +
-                '</svg>' +
-                'コピーしました！';
+            btn.innerHTML = `
+                <svg class="copy-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+                コピーしました！
+            `;
             btn.classList.add('copied');
             
             // 2秒後に元に戻す
-            setTimeout(function() {
-                btn.innerHTML =
-                    '<svg class="copy-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">' +
-                        '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>' +
-                    '</svg>' +
-                    'コピー';
+            setTimeout(() => {
+                btn.innerHTML = `
+                    <svg class="copy-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                    </svg>
+                    コピー
+                `;
                 btn.classList.remove('copied');
             }, 2000);
         }
