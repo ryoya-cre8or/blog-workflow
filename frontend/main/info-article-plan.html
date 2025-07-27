@@ -381,13 +381,13 @@
 
             <!-- 添付資料 -->
             <div class="form-group">
-                <label for="attachments">添付資料（PDF, Word文書）</label>
+                <label for="attachments">添付資料（PDF）</label>
                 <div class="file-upload-area" id="fileUploadArea">
-                    <input type="file" id="attachments" name="attachments" class="file-input" accept=".pdf,.docx,.doc">
+                    <input type="file" id="attachments" name="attachments" class="file-input" accept=".pdf">
                     <div class="file-upload-content">
                         <div class="file-upload-icon">📎</div>
                         <div class="file-upload-text">ファイルをドラッグ＆ドロップ</div>
-                        <div class="file-upload-hint">または クリックして選択（PDF, Word文書、1ファイルのみ）</div>
+                        <div class="file-upload-hint">または クリックして選択（PDF1ファイルのみ）</div>
                     </div>
                 </div>
                 <div class="uploaded-files" id="uploadedFiles"></div>
@@ -740,10 +740,10 @@
          * @param {File} file - ファイル
          */
         function addFile(file) {
-            const validTypes = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/msword'];
+            const validTypes = ['application/pdf'];
             
             if (!validTypes.includes(file.type)) {
-                alert('PDF、Word文書のみアップロード可能です。');
+                alert('PDFのみアップロード可能です。');
                 return;
             }
             
