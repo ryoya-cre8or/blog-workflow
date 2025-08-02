@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>お知らせプラン</title>
+    <title>SEOライトプラン</title>
     
     <!-- ============================= CSS ============================= -->
     <style>
@@ -43,7 +43,7 @@
         }
 
         .content-icon {
-            background-color: #28a745;
+            background-color: #007BFF;
             color: white;
             width: 40px;
             height: 40px;
@@ -99,7 +99,7 @@
         textarea:focus,
         select:focus {
             outline: none;
-            border-color: #28a745;
+            border-color: #007BFF;
             background-color: white;
         }
 
@@ -133,13 +133,13 @@
         }
 
         .file-upload-area:hover {
-            border-color: #28a745;
-            background-color: #f0f8f0;
+            border-color: #007BFF;
+            background-color: #f0f8ff;
         }
 
         .file-upload-area.dragover {
-            border-color: #28a745;
-            background-color: #e8f5e8;
+            border-color: #007BFF;
+            background-color: #e8f4ff;
         }
 
         .file-input {
@@ -195,7 +195,7 @@
 
         .file-icon {
             margin-right: 8px;
-            color: #28a745;
+            color: #007BFF;
         }
 
         .remove-file {
@@ -215,7 +215,7 @@
         .submit-btn {
             width: 100%;
             padding: 16px;
-            background-color: #28a745;
+            background-color: #007BFF;
             color: white;
             border: none;
             border-radius: 8px;
@@ -226,7 +226,7 @@
         }
 
         .submit-btn:hover {
-            background-color: #218838;
+            background-color: #0056b3;
         }
 
         .submit-btn:disabled {
@@ -236,7 +236,7 @@
 
         .copy-btn {
             padding: 8px 16px;
-            background-color: #007BFF;
+            background-color: #28a745;
             color: white;
             border: none;
             border-radius: 6px;
@@ -249,7 +249,7 @@
         }
 
         .copy-btn:hover {
-            background-color: #0056b3;
+            background-color: #218838;
             transform: translateY(-1px);
         }
 
@@ -298,18 +298,54 @@
             gap: 20px;
         }
 
-        .spinner {
+        .lightbulb {
             width: 60px;
             height: 60px;
-            border: 6px solid #f3f3f3;
-            border-top: 6px solid #28a745;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
+            position: relative;
+            animation: pulse 1.5s ease-in-out infinite;
         }
 
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        .lightbulb::before {
+            content: '';
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background: #007BFF;
+            border-radius: 50%;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            box-shadow: 0 0 20px #007BFF;
+            animation: glow 1.5s ease-in-out infinite;
+        }
+
+        .lightbulb::after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: #666;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            border-radius: 0 0 10px 10px;
+        }
+
+        /* ===== アニメーション ===== */
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        @keyframes glow {
+            0%, 100% { 
+                box-shadow: 0 0 20px #007BFF, 0 0 40px #007BFF;
+                background: #007BFF;
+            }
+            50% { 
+                box-shadow: 0 0 30px #0084ff, 0 0 60px #0084ff;
+                background: #0084ff;
+            }
         }
 
         .loading-text {
@@ -354,8 +390,13 @@
             animation: spin 1s linear infinite;
         }
 
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
         .usage-count {
-            color: #28a745;
+            color: #007BFF;
             font-weight: 500;
         }
 
@@ -389,10 +430,10 @@
         <div class="header">
             <div class="content-icon">
                 <svg fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
+                    <path d="M9 11H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm2-7h-1V2a1 1 0 00-2 0v2H8V2a1 1 0 00-2 0v2H5a3 3 0 00-3 3v11a3 3 0 003 3h14a3 3 0 003-3V7a3 3 0 00-3-3zm1 14a1 1 0 01-1 1H5a1 1 0 01-1-1V7a1 1 0 011-1h1v1a1 1 0 002 0V6h8v1a1 1 0 002 0V6h1a1 1 0 011 1v11z"/>
                 </svg>
             </div>
-            <h1>お知らせプラン</h1>
+            <h1>SEOライトプラン</h1>
         </div>
 
         <!-- フォームセクション -->
@@ -412,16 +453,16 @@
                 </div>
             </div>
 
-            <!-- トピック入力 -->
+            <!-- キーワード入力 -->
             <div class="form-group">
-                <label for="topic">トピック<span class="required-mark">*</span></label>
-                <input type="text" id="topic" name="topic" placeholder="例: 新商品の紹介" required>
+                <label for="keywords">SEO対策するキーワード<span class="required-mark">*</span></label>
+                <input type="text" id="keywords" name="keywords" placeholder="例: 賃貸" required>
             </div>
 
-            <!-- 本文メモ入力 -->
+            <!-- ターゲットオーディエンス入力 -->
             <div class="form-group">
-                <label for="contentMemo">本文メモ<span class="required-mark">*</span></label>
-                <textarea id="contentMemo" name="contentMemo" class="memo-textarea" placeholder="例: 新商品の特徴やメリット、ターゲット層への訴求ポイントなど、ラフな内容で構いません" required></textarea>
+                <label for="targetAudience">この記事を読むのはどんな人？<span class="required-mark">*</span></label>
+                <textarea id="targetAudience" name="targetAudience" class="memo-textarea" placeholder="例: エンジニア1年目、30代男性で賃貸物件を探している人、など" required></textarea>
             </div>
 
             <!-- 添付資料 -->
@@ -438,34 +479,17 @@
                 <div class="uploaded-files" id="uploadedFiles"></div>
             </div>
 
-            <!-- テイスト選択 -->
+            <!-- 文章スタイル選択 -->
             <div class="form-group">
-                <label for="tone">テイスト<span class="required-mark">*</span></label>
-                <select id="tone" name="tone" required>
-                    <option value="">テイストを選択してください</option>
-                    <option value="ビジネス">ビジネス</option>
-                    <option value="カジュアル">カジュアル</option>
-                    <option value="やわらかめ">やわらかめ</option>
-                    <option value="プレスリリース風">プレスリリース風</option>
+                <label for="writingStyle">文章の雰囲気<span class="required-mark">*</span></label>
+                <select id="writingStyle" name="writingStyle" required>
+                    <option value="">文章の雰囲気を選んでください</option>
+                    <option value="誰でもわかるように">誰でもわかるように</option>
+                    <option value="専門的に">専門的に</option>
+                    <option value="親しみやすく">親しみやすく</option>
+                    <option value="フォーマルに">フォーマルに</option>
+                    <option value="カジュアルに">カジュアルに</option>
                 </select>
-            </div>
-
-            <!-- 読者ターゲット入力 -->
-            <div class="form-group">
-                <label for="targetAudienceSelect">読者ターゲット<span class="required-mark">*</span></label>
-                <select id="targetAudienceSelect" name="targetAudienceSelect" required>
-                    <option value="">読者ターゲットを選択してください</option>
-                    <option value="既存顧客">既存顧客</option>
-                    <option value="新規顧客">新規顧客</option>
-                    <option value="パートナー企業">パートナー企業</option>
-                    <option value="留学生">留学生</option>
-                    <option value="その他">その他</option>
-                </select>
-                <div class="form-group" id="customTargetGroup" style="display: none; margin-top: 16px;">
-                    <label for="customTarget">具体的なターゲット<span class="required-mark">*</span></label>
-                    <input type="text" id="customTarget" name="customTarget" placeholder="具体的な読者ターゲットを入力してください">
-                </div>
-                <input type="hidden" id="targetAudience" name="targetAudience">
             </div>
 
             <!-- 送信ボタン -->
@@ -491,8 +515,8 @@
     <!-- ========================== JavaScript ========================== -->
     <script>
         /**
-         * Content Creation Form Application
-         * お知らせプランの送信とレスポンス表示を管理するメインスクリプト
+         * SEO Light Plan Application
+         * SEOライトプランの送信とレスポンス表示を管理するメインスクリプト
          */
 
         // ===== DOM要素の取得 =====
@@ -533,10 +557,6 @@
             fileUploadArea.addEventListener('dragleave', handleDragLeave);
             fileUploadArea.addEventListener('drop', handleDrop);
             
-            // 読者ターゲット選択関連
-            document.getElementById('targetAudienceSelect').addEventListener('change', handleTargetAudienceChange);
-            document.getElementById('customTarget').addEventListener('input', handleCustomTargetInput);
-            
             // 使用回数チェック関連
             userIdInput.addEventListener('blur', handleUserIdCheck);
             userIdInput.addEventListener('input', clearUsageDisplay);
@@ -573,11 +593,10 @@
             
             // 基本データを個別に追加
             formData.append('user_id', document.getElementById('userId').value);
-            formData.append('topic', document.getElementById('topic').value);
-            formData.append('content_memo', document.getElementById('contentMemo').value);
-            formData.append('tone', document.getElementById('tone').value);
-            formData.append('target_audience', document.getElementById('targetAudience').value);
-            formData.append('plan', 'info_article');
+            formData.append('keyword', document.getElementById('keywords').value);
+            formData.append('persona', document.getElementById('targetAudience').value);
+            formData.append('tone', document.getElementById('writingStyle').value);
+            formData.append('plan', 'seo_light');
             
             // ファイルの追加
             if (selectedFile) {
@@ -597,8 +616,8 @@
             responseContainer.style.display = 'block';
             responseContent.innerHTML = `
                 <div class="loading">
-                    <div class="spinner"></div>
-                    <div class="loading-text">AIがコンテンツを作成中...</div>
+                    <div class="lightbulb"></div>
+                    <div class="loading-text">AIがSEOコンテンツを作成中...</div>
                 </div>
             `;
         }
@@ -609,7 +628,7 @@
          * @returns {Response} フェッチレスポンス
          */
         async function sendApiRequest(formData) {
-            const response = await fetch('https://machibun.app.n8n.cloud/webhook/info-message/ask-ai', {
+            const response = await fetch('https://machibun.app.n8n.cloud/webhook-test/52ee8123-4406-4330-b48e-3c5a025a525a', {
                 method: 'POST',
                 body: formData,
                 mode: 'cors',
@@ -715,37 +734,6 @@
                 "'": '&#039;'
             };
             return text.replace(/[&<>"']/g, m => map[m]);
-        }
-
-        /**
-         * 読者ターゲット選択変更処理
-         * @param {Event} e - 選択変更イベント
-         */
-        function handleTargetAudienceChange(e) {
-            const selectedValue = e.target.value;
-            const customTargetGroup = document.getElementById('customTargetGroup');
-            const customTargetInput = document.getElementById('customTarget');
-            const targetAudienceHidden = document.getElementById('targetAudience');
-            
-            if (selectedValue === 'その他') {
-                customTargetGroup.style.display = 'block';
-                customTargetInput.required = true;
-                targetAudienceHidden.value = '';
-            } else {
-                customTargetGroup.style.display = 'none';
-                customTargetInput.required = false;
-                customTargetInput.value = '';
-                targetAudienceHidden.value = selectedValue;
-            }
-        }
-
-        /**
-         * カスタムターゲット入力処理
-         * @param {Event} e - 入力イベント
-         */
-        function handleCustomTargetInput(e) {
-            const targetAudienceHidden = document.getElementById('targetAudience');
-            targetAudienceHidden.value = e.target.value;
         }
 
         /**
@@ -1034,4 +1022,4 @@
         }
     </script>
 </body>
-</html>
+</html> 
