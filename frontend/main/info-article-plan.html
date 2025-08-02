@@ -328,6 +328,42 @@
             margin: 16px;
         }
 
+        /* ===== 使用回数表示 ===== */
+        .usage-info {
+            margin-top: 8px;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            border: 1px solid #e0e0e0;
+            background-color: #f8f9fa;
+        }
+
+        .usage-loading {
+            color: #6c757d;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .usage-spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #6c757d;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        .usage-count {
+            color: #28a745;
+            font-weight: 500;
+        }
+
+        .usage-error {
+            color: #dc3545;
+            font-weight: 500;
+        }
+
         /* ===== レスポンシブ対応 ===== */
         @media (max-width: 768px) {
             .container {
@@ -365,6 +401,15 @@
             <div class="form-group">
                 <label for="userId">ユーザーID<span class="required-mark">*</span></label>
                 <input type="text" id="userId" name="userId" placeholder="例: eb3eec29-a8db-4abb-8977-4dce12e13f70" required>
+                <!-- 使用回数表示エリア -->
+                <div class="usage-info" id="usageInfo" style="display: none;">
+                    <div class="usage-loading" id="usageLoading" style="display: none;">
+                        <span class="usage-spinner"></span>
+                        使用回数を確認中...
+                    </div>
+                    <div class="usage-count" id="usageCount" style="display: none;"></div>
+                    <div class="usage-error" id="usageError" style="display: none;"></div>
+                </div>
             </div>
 
             <!-- トピック入力 -->
@@ -459,6 +504,13 @@
         const fileUploadArea = document.getElementById('fileUploadArea');
         const fileInput = document.getElementById('attachments');
         const uploadedFiles = document.getElementById('uploadedFiles');
+        
+        // 使用回数チェック関連の要素
+        const userIdInput = document.getElementById('userId');
+        const usageInfo = document.getElementById('usageInfo');
+        const usageLoading = document.getElementById('usageLoading');
+        const usageCount = document.getElementById('usageCount');
+        const usageError = document.getElementById('usageError');
 
         // ===== グローバル変数 =====
         let rawResponse = '';
@@ -484,6 +536,10 @@
             // 読者ターゲット選択関連
             document.getElementById('targetAudienceSelect').addEventListener('change', handleTargetAudienceChange);
             document.getElementById('customTarget').addEventListener('input', handleCustomTargetInput);
+            
+            // 使用回数チェック関連
+            userIdInput.addEventListener('blur', handleUserIdCheck);
+            userIdInput.addEventListener('input', clearUsageDisplay);
         }
 
         /**
@@ -792,6 +848,140 @@
             const sizes = ['Bytes', 'KB', 'MB', 'GB'];
             const i = Math.floor(Math.log(bytes) / Math.log(k));
             return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        // ===== 使用回数チェック機能 =====
+        
+        /**
+         * ユーザーID入力チェック処理
+         */
+        async function handleUserIdCheck() {
+            const userId = userIdInput.value.trim();
+            
+            // 空または無効な場合は表示を隠す
+            if (!userId || !isValidUserId(userId)) {
+                hideUsageDisplay();
+                return;
+            }
+            
+            // ローディング表示
+            showUsageLoading();
+            
+            try {
+                const usageData = await checkUsageCount(userId);
+                displayUsageCount(usageData);
+            } catch (error) {
+                displayUsageError(error.message);
+            }
+        }
+        
+        /**
+         * 使用回数表示をクリア（入力中）
+         */
+        function clearUsageDisplay() {
+            hideUsageDisplay();
+        }
+        
+        /**
+         * 使用回数API呼び出し
+         * @param {string} userId - ユーザーID
+         * @returns {Object} 使用回数データ
+         */
+        async function checkUsageCount(userId) {
+            try {
+                const response = await fetch(`https://machibun.app.n8n.cloud/webhook/get-count?userId=${encodeURIComponent(userId)}`, {
+                    method: 'GET',
+                    mode: 'cors',
+                    credentials: 'omit'
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                
+                // APIからエラーレスポンスが返された場合の処理
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                return data;
+            } catch (error) {
+                console.error('Usage count check failed:', error);
+                
+                // ネットワークエラーの場合
+                if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+                    throw new Error('使用回数の確認に失敗しました。ネットワーク接続を確認してください。');
+                }
+                
+                // APIからのエラーメッセージをそのまま表示
+                if (error.message === '存在しないユーザーIDです') {
+                    throw new Error(error.message);
+                }
+                
+                // その他のエラー
+                throw new Error(error.message || '使用回数の確認中にエラーが発生しました。');
+            }
+        }
+        
+        /**
+         * UUID形式のバリデーション
+         * @param {string} userId - ユーザーID
+         * @returns {boolean} バリデーション結果
+         */
+        function isValidUserId(userId) {
+            const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+            return uuidRegex.test(userId);
+        }
+        
+        /**
+         * ローディング表示
+         */
+        function showUsageLoading() {
+            usageInfo.style.display = 'block';
+            usageLoading.style.display = 'flex';
+            usageCount.style.display = 'none';
+            usageError.style.display = 'none';
+        }
+        
+        /**
+         * 使用回数表示
+         * @param {Object} data - 使用回数データ
+         */
+        function displayUsageCount(data) {
+            usageInfo.style.display = 'block';
+            usageLoading.style.display = 'none';
+            usageCount.style.display = 'block';
+            usageError.style.display = 'none';
+            
+            // データ構造に応じて表示内容を調整
+            if (data.remaining !== undefined) {
+                usageCount.textContent = `残り使用回数: ${data.remaining}回`;
+            } else if (data.count !== undefined) {
+                usageCount.textContent = `使用回数: ${data.count}回`;
+            } else {
+                usageCount.textContent = '使用回数を確認しました';
+            }
+        }
+        
+        /**
+         * エラー表示
+         * @param {string} message - エラーメッセージ
+         */
+        function displayUsageError(message) {
+            usageInfo.style.display = 'block';
+            usageLoading.style.display = 'none';
+            usageCount.style.display = 'none';
+            usageError.style.display = 'block';
+            usageError.textContent = message;
+        }
+        
+        /**
+         * 使用回数表示を隠す
+         */
+        function hideUsageDisplay() {
+            usageInfo.style.display = 'none';
         }
 
         /**
